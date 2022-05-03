@@ -103,6 +103,11 @@ function send_mail(recipients, subject, body) {
 
 // Action should be; archived, read etc. actionBool either true or false. 
 function get_email(emailID, action, actionBool) {
+  if (action != 'archived' | 'read') {
+    console.log('invalid action')
+  }
+
+
 fetch('/emails/' + emailID, {
   method: 'PUT',
   body: JSON.stringify({
