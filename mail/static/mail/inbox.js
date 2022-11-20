@@ -1,14 +1,16 @@
 document.addEventListener('DOMContentLoaded', function () {
 
+
+
     // Use buttons to toggle between views
     document.querySelector('#inbox').addEventListener('click', () => load_mailbox('inbox'));
     document.querySelector('#sent').addEventListener('click', () => load_mailbox('sent'));
     document.querySelector('#archived').addEventListener('click', () => load_mailbox('archive'));
     document.querySelector('#compose').addEventListener('click', () => compose_email());
 
-
     // By default, load the inbox
     load_mailbox('inbox');
+
 });
 
 function compose_email() {
@@ -21,10 +23,11 @@ function compose_email() {
     document.querySelector('#compose-recipients').value = '';
     document.querySelector('#compose-subject').value = '';
     document.querySelector('#compose-body').value = '';
+
+
 }
 
 function load_mailbox(mailbox) {
-
     // Show the mailbox and hide other views
     document.querySelector('#emails-view').style.display = 'block';
     document.querySelector('#compose-view').style.display = 'none';
@@ -34,12 +37,12 @@ function load_mailbox(mailbox) {
     document.querySelector('#view-email').innerHTML = ''
     document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
 
-    let promise = fetch('emails/' + mailbox)
+
+    fetch('emails/' + mailbox)
         .then(response => response.json())
         .then(emails => {
 
             for (let i = 0; i < emails.length; i++) {
-
                 let sender = document.createElement('div')
                 sender.setAttribute('id', "sender-inbox")
                 sender.innerHTML = emails[i]['sender']
@@ -59,6 +62,8 @@ function load_mailbox(mailbox) {
                 } else {
                     emailBody.innerHTML = emails[i]['body']
                 }
+
+
                 emailSummary.appendChild(subject)
                 emailSummary.appendChild(emailBody)
 
@@ -75,7 +80,7 @@ function load_mailbox(mailbox) {
                 anEmail.appendChild(emailSummary)
                 anEmail.appendChild(timestamp)
 
-                if (emails[i]['read'] === true) {
+                if (emails[i]['read'] === true && mailbox != 'sent') {
                     anEmail.style.backgroundColor = "rgb(223, 223, 222)"
                 }
                 document.querySelector('#emails-view').appendChild(anEmail)
@@ -85,8 +90,6 @@ function load_mailbox(mailbox) {
 }
 
 function send_mail() {
-    alert('sending email...');
-
     let recipients = document.querySelector("#compose-recipients").value;
     let subject = document.querySelector("#compose-subject").value;
     let body = document.querySelector("#compose-body").value;
@@ -99,21 +102,22 @@ function send_mail() {
         "body": body
     }
 
-    let response = fetch('emails', {
+    fetch('emails', {
         method: 'POST',
         body: JSON.stringify(data)
     })
-
         .then(response => response.json())
         .then(result => {
-            console.log(result);
+
+            if (result['error']){
+                alert(JSON.stringify(result));
+            }
+            else {
+                alert('email sent successfully')
+                alert("calling sent")
+                load_mailbox('sent')
+            }
         })
-
-    console.log(response)
-
-    // if response != 400
-    load_mailbox('sent')
-
 }
 
 function view_email(id) {
@@ -199,9 +203,7 @@ function view_email(id) {
 }
 
 function reply_all(id, email) {
-    console.log(email)
-
-        // Show compose view and hide other views
+    // Show compose view and hide other views
 
     document.querySelector('#emails-view').style.display = 'none';
     document.querySelector('#compose-view').style.display = 'block';
@@ -214,14 +216,13 @@ function reply_all(id, email) {
     } else {
         document.querySelector('#compose-subject').value = 'RE: ' + email['subject']
     }
-    var textBody = 'On ' + email['timestamp'] + ' ' + email['sender'] + ' wrote: \n' + email['body']
+    var textBody = '\n \n \n On ' + email['timestamp'] + ' ' + email['sender'] + ' wrote: \n' + email['body']
 
     document.querySelector('#compose-body').value =  textBody
 
 }
 
 function email_action(id, action) {
-
 
     if (action === 'unread') {
         fetch('/emails/' + id, {

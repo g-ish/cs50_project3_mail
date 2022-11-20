@@ -40,24 +40,30 @@ textarea {
 }
 
 #sender {
+    padding-top: 10px;
+    border-top: solid 1px grey;
+    margin: 20px 0px;
     font-weight: bold;
-    margin-bottom: 20px;
 }
 #subject {
     font-weight: bold;
     font-size: 1.2em;
+    padding-bottom: 5px;
 }
 
 #tStamp {
-    float: right;
+   padding-bottom: 15px;
 }
+
 #email-body {
-    float: bottom;
+    border-top: solid 1px grey;
+    padding-top: 15px;
+
 }
 #unreadButton {
     float: right;
 }
 
 #email-interactions-header > button {
-    margin: 15px;
+    margin-right: 15px;
 }
