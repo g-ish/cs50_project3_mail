@@ -1,13 +1,12 @@
 document.addEventListener('DOMContentLoaded', function () {
 
-
-
     // Use buttons to toggle between views
     document.querySelector('#inbox').addEventListener('click', () => load_mailbox('inbox'));
     document.querySelector('#sent').addEventListener('click', () => load_mailbox('sent'));
     document.querySelector('#archived').addEventListener('click', () => load_mailbox('archive'));
     document.querySelector('#compose').addEventListener('click', () => compose_email());
 
+     document.querySelector('#compose-form').addEventListener('submit', send_mail);
     // By default, load the inbox
     load_mailbox('inbox');
 
@@ -18,6 +17,7 @@ function compose_email() {
     // Show compose view and hide other views
     document.querySelector('#emails-view').style.display = 'none';
     document.querySelector('#compose-view').style.display = 'block';
+    document.querySelector('#view-email').style.display = 'none';
 
     // Clear out composition fields
     document.querySelector('#compose-recipients').value = '';
@@ -33,16 +33,15 @@ function load_mailbox(mailbox) {
     document.querySelector('#compose-view').style.display = 'none';
     document.querySelector('#view-email').style.display = 'none';
 
-    // Delete the view-email div if one available.
-    document.querySelector('#view-email').innerHTML = ''
     document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
 
-
+    console.log('Loading mailbox: ' + mailbox)
     fetch('emails/' + mailbox)
+
         .then(response => response.json())
         .then(emails => {
-
             for (let i = 0; i < emails.length; i++) {
+                console.log(emails[i])
                 let sender = document.createElement('div')
                 sender.setAttribute('id', "sender-inbox")
                 sender.innerHTML = emails[i]['sender']
@@ -73,15 +72,16 @@ function load_mailbox(mailbox) {
 
                 let anEmail = document.createElement('div')
                 anEmail.setAttribute('href', "#")
-                anEmail.setAttribute('onclick', `view_email(${emails[i]['id']});`)
                 anEmail.setAttribute('id', 'single-email')
 
                 anEmail.appendChild(sender)
                 anEmail.appendChild(emailSummary)
                 anEmail.appendChild(timestamp)
+                anEmail.addEventListener('click', () => view_email(emails[i]['id']))
+
 
                 if (emails[i]['read'] === true && mailbox != 'sent') {
-                    anEmail.style.backgroundColor = "rgb(223, 223, 222)"
+                    anEmail.style.backgroundColor = "rgb(255,255,255)"
                 }
                 document.querySelector('#emails-view').appendChild(anEmail)
             }
@@ -89,12 +89,11 @@ function load_mailbox(mailbox) {
 
 }
 
-function send_mail() {
+function send_mail(event) {
+    event.preventDefault() // https://developer.mozilla.org/en-US/docs/web/api/event/preventdefault
     let recipients = document.querySelector("#compose-recipients").value;
     let subject = document.querySelector("#compose-subject").value;
     let body = document.querySelector("#compose-body").value;
-
-    console.log('sending email...')
 
     const data = {
         "recipients": recipients,
@@ -108,16 +107,16 @@ function send_mail() {
     })
         .then(response => response.json())
         .then(result => {
-
+            console.log(result)
             if (result['error']){
-                alert(JSON.stringify(result));
+                console.log(JSON.stringify(result));
             }
             else {
-                alert('email sent successfully')
-                alert("calling sent")
+                console.log('email sent successfully')
                 load_mailbox('sent')
             }
         })
+
 }
 
 function view_email(id) {
@@ -125,13 +124,20 @@ function view_email(id) {
     document.querySelector('#compose-view').style.display = 'none';
     document.querySelector('#view-email').style.display = 'block';
 
+
     let viewEmailObj = document.querySelector('#view-email');
+    viewEmailObj.innerHTML = '' // reset any divs created by a different email
+
+
+    let interactionsHeader = document.createElement('div')
+    interactionsHeader.setAttribute('id', "email-interactions-header")
+
+
     fetch('emails/' + id)
         .then(response => response.json())
         .then(email => {
 
-            let interactionsHeader = document.createElement('div')
-            interactionsHeader.setAttribute('id', "email-interactions-header")
+
 
             if (email['archived'] != true) {
                 let replyButton = document.createElement('button')
@@ -139,18 +145,14 @@ function view_email(id) {
                 replyButton.setAttribute('id', 'reply-all')
                 replyButton.innerHTML = 'Reply all'
 
-                replyButton.addEventListener('click', function () {
-                    reply_all(id, email)
-                })
+
 
                 let unreadButton = document.createElement('button')
                 unreadButton.setAttribute('class', 'btn btn-warning')
                 unreadButton.setAttribute('id', 'mark-unread')
                 unreadButton.innerHTML = 'Mark as unread'
 
-                unreadButton.addEventListener('click', function () {
-                    email_action(id, action = "unread")
-                })
+
 
                 let archiveButton = document.createElement('button')
                 archiveButton.setAttribute('class', 'btn btn-danger')
@@ -159,6 +161,12 @@ function view_email(id) {
 
                 archiveButton.addEventListener('click', function () {
                     email_action(id, action = "archive")
+                })
+                unreadButton.addEventListener('click', function () {
+                    email_action(id, action = "unread")
+                })
+                replyButton.addEventListener('click', function () {
+                    reply_all(id, email)
                 })
 
                 interactionsHeader.append(replyButton, unreadButton, archiveButton)
@@ -216,7 +224,7 @@ function reply_all(id, email) {
     } else {
         document.querySelector('#compose-subject').value = 'RE: ' + email['subject']
     }
-    var textBody = '\n \n \n On ' + email['timestamp'] + ' ' + email['sender'] + ' wrote: \n' + email['body']
+    var textBody = '\n \n \n \n ' + email['timestamp'] + ' ' + email['sender'] + ' wrote: \n' + email['body']
 
     document.querySelector('#compose-body').value =  textBody
 
@@ -245,7 +253,6 @@ function email_action(id, action) {
         })
             .then(response => {
                 console.log(response)
-
                 load_mailbox('archive')
             })
 
