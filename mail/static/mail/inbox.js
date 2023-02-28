@@ -41,7 +41,6 @@ function load_mailbox(mailbox) {
         .then(response => response.json())
         .then(emails => {
             for (let i = 0; i < emails.length; i++) {
-                console.log(emails[i])
                 let sender = document.createElement('div')
                 sender.setAttribute('id', "sender-inbox")
                 sender.innerHTML = emails[i]['sender']
@@ -101,15 +100,15 @@ function send_mail(event) {
         "body": body
     }
 
+
     fetch('emails', {
         method: 'POST',
         body: JSON.stringify(data)
     })
         .then(response => response.json())
         .then(result => {
-            console.log(result)
             if (result['error']){
-                console.log(JSON.stringify(result));
+                alert(JSON.stringify(result));
             }
             else {
                 console.log('email sent successfully')
@@ -159,6 +158,7 @@ function view_email(id) {
                 archiveButton.setAttribute('id', 'mark-archive')
                 archiveButton.innerHTML = 'Send to Archive'
 
+
                 archiveButton.addEventListener('click', function () {
                     email_action(id, action = "archive")
                 })
@@ -186,19 +186,23 @@ function view_email(id) {
 
             let sender = document.createElement('div')
             sender.setAttribute('id', "sender")
-            sender.innerHTML = email['sender']
+            sender.innerHTML = 'From : ' + email['sender']
 
             let subject = document.createElement('div')
             subject.setAttribute('id', 'subject')
-            subject.innerHTML = email['subject']
+            subject.innerHTML = 'Subject: ' + email['subject']
 
             let tStamp = document.createElement('div')
             tStamp.setAttribute('id', 'tStamp')
-            tStamp.innerHTML = email['timestamp']
+            tStamp.innerHTML = 'Date: ' + email['timestamp']
 
             let emailBody = document.createElement('div')
             emailBody.setAttribute('id', 'email-body')
-            emailBody.innerHTML = email['body']
+
+
+            let body = ''
+            body = email['body'].replace(/\r\n|\r|\n/g,'<br>') // replace JS new lines with HTML type new lines
+            emailBody.innerHTML = body
             viewEmailObj.append(interactionsHeader, sender, subject, tStamp, emailBody)
 
             fetch('/emails/' + id, {
@@ -224,7 +228,8 @@ function reply_all(id, email) {
     } else {
         document.querySelector('#compose-subject').value = 'RE: ' + email['subject']
     }
-    var textBody = '\n \n \n \n ' + email['timestamp'] + ' ' + email['sender'] + ' wrote: \n' + email['body']
+
+    var textBody = '\n \n \n \n' + email['timestamp'] + ' ' + email['sender'] + 'wrote: \n' + email['body']
 
     document.querySelector('#compose-body').value =  textBody
 
@@ -268,7 +273,11 @@ function email_action(id, action) {
                 load_mailbox('inbox')
             })
 
-    } else {
+    } else if (action === 'reply-all') {
+        console.log('replying  all')
+
+    }
+    else {
         console.log('unknown action: ' + action)
     }
 
