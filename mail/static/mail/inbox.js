@@ -41,9 +41,34 @@ function load_mailbox(mailbox) {
         .then(response => response.json())
         .then(emails => {
             for (let i = 0; i < emails.length; i++) {
-                let sender = document.createElement('div')
-                sender.setAttribute('id', "sender-inbox")
-                sender.innerHTML = emails[i]['sender']
+                let emailAddress = document.createElement('div')
+                if (mailbox === "sent") {
+                    emailAddress.setAttribute('id', 'sender-inbox')
+                    let addresses = emails[i]['recipients']
+                    let show_addresses = ''
+
+
+                    for (let addressCount = 0; addressCount < addresses.length; addressCount++) {
+                        if (addressCount == 0) {
+                            show_addresses = "<b>" + addresses[addressCount] + "</b>"
+                        } else {
+                            show_addresses = show_addresses + ', ' + addresses[addressCount]
+                            // Only show the first 3 addresses, compact the remainder
+                            if (addressCount == 2){
+                                show_addresses = show_addresses + ', + ' + String(addresses.length - addressCount - 1) + ' addresses.'
+                                break;
+                            }
+                        }
+                    }
+                    show_addresses.trim()
+                    emailAddress.innerHTML = show_addresses
+
+                } else {
+
+                    emailAddress.setAttribute('id', "sender-inbox")
+                    emailAddress.innerHTML = emails[i]['sender']
+                }
+
 
 
                 let emailSummary = document.createElement('div')
@@ -73,18 +98,21 @@ function load_mailbox(mailbox) {
                 anEmail.setAttribute('href', "#")
                 anEmail.setAttribute('id', 'single-email')
 
-                anEmail.appendChild(sender)
+                anEmail.appendChild(emailAddress)
                 anEmail.appendChild(emailSummary)
                 anEmail.appendChild(timestamp)
                 anEmail.addEventListener('click', () => view_email(emails[i]['id']))
 
+                if (emails[i]['read'] == true && mailbox == 'inbox') {
+                    anEmail.style.backgroundColor = "rgb(112,128,144)"
+                } else {
 
-                if (emails[i]['read'] === true && mailbox != 'sent') {
                     anEmail.style.backgroundColor = "rgb(255,255,255)"
                 }
                 document.querySelector('#emails-view').appendChild(anEmail)
             }
         });
+
 
 }
 
@@ -100,7 +128,7 @@ function send_mail(event) {
         "body": body
     }
 
-
+    console.log(data)
     fetch('emails', {
         method: 'POST',
         body: JSON.stringify(data)
@@ -188,6 +216,10 @@ function view_email(id) {
             sender.setAttribute('id', "sender")
             sender.innerHTML = 'From : ' + email['sender']
 
+            let recipients = document.createElement('div')
+            recipients.setAttribute('id', "recipients")
+            recipients.innerHTML = 'To : ' + email['recipients']
+
             let subject = document.createElement('div')
             subject.setAttribute('id', 'subject')
             subject.innerHTML = 'Subject: ' + email['subject']
@@ -203,7 +235,7 @@ function view_email(id) {
             let body = ''
             body = email['body'].replace(/\r\n|\r|\n/g,'<br>') // replace JS new lines with HTML type new lines
             emailBody.innerHTML = body
-            viewEmailObj.append(interactionsHeader, sender, subject, tStamp, emailBody)
+            viewEmailObj.append(interactionsHeader, sender, recipients, subject, tStamp, emailBody)
 
             fetch('/emails/' + id, {
                 method: 'PUT',
@@ -229,7 +261,7 @@ function reply_all(id, email) {
         document.querySelector('#compose-subject').value = 'RE: ' + email['subject']
     }
 
-    var textBody = '\n \n \n \n' + email['timestamp'] + ' ' + email['sender'] + 'wrote: \n' + email['body']
+    var textBody = '\n \n \n \n' + email['timestamp'] + ' ' + email['sender'] + ' wrote: \n' + email['body']
 
     document.querySelector('#compose-body').value =  textBody
 

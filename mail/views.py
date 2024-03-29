@@ -1,4 +1,6 @@
 import json
+import re
+
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
@@ -8,6 +10,7 @@ from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 
 from .models import User, Email
+
 
 
 def index(request):
@@ -30,8 +33,9 @@ def compose(request):
 
     # Check recipient emails
     data = json.loads(request.body)
-    emails = [email.strip() for email in data.get("recipients").split(",")]
-    if emails == [""]:
+    data_emails = data.get("recipients")
+    data_emails = re.split(';|,', data_emails)
+    if data_emails == [""]:
         return JsonResponse({
             "error": "At least one recipient required."
         }, status=400)
@@ -39,36 +43,42 @@ def compose(request):
 
     # Convert email addresses to users
     recipients = []
-    for email in emails:
+    for recipient_email in data_emails:
+        recipient_email = recipient_email.strip().lower()
         try:
-
-            user = User.objects.get(email=email)
+            user = User.objects.get(email=recipient_email)
             recipients.append(user)
-        except User.DoesNotExist:
-            return JsonResponse({
-                "error": f"User with email {email} does not exist."
-            }, status=400)
+        except Exception as e:
+            print(recipient_email)
+            print(e)
+            user = User.objects.filter(email=email)
+            print(user)
+        # except User.DoesNotExist:
+        #     return JsonResponse({
+        #         "error": f"User with email {recipient_email} does not exist."
+        #     }, status=400)
 
     # Get contents of email
     subject = data.get("subject", "")
     body = data.get("body", "")
 
+    print("Working")
     # Create one email for each recipient, plus sender
     users = set()
     users.add(request.user)
     users.update(recipients)
     for user in users:
-        email = Email(
+        recipient_email = Email(
             user=user,
             sender=request.user,
             subject=subject,
             body=body,
             read=user == request.user
         )
-        email.save()
+        recipient_email.save()
         for recipient in recipients:
-            email.recipients.add(recipient)
-        email.save()
+            recipient_email.recipients.add(recipient)
+        recipient_email.save()
 
     return JsonResponse({"message": "Email sent successfully."}, status=201)
 
