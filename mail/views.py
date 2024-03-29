@@ -48,21 +48,15 @@ def compose(request):
         try:
             user = User.objects.get(email=recipient_email)
             recipients.append(user)
-        except Exception as e:
-            print(recipient_email)
-            print(e)
-            user = User.objects.filter(email=email)
-            print(user)
-        # except User.DoesNotExist:
-        #     return JsonResponse({
-        #         "error": f"User with email {recipient_email} does not exist."
-        #     }, status=400)
+        except User.DoesNotExist:
+            return JsonResponse({
+                "error": f"User with email {recipient_email} does not exist."
+            }, status=400)
 
     # Get contents of email
     subject = data.get("subject", "")
     body = data.get("body", "")
 
-    print("Working")
     # Create one email for each recipient, plus sender
     users = set()
     users.add(request.user)

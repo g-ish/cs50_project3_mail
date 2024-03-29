@@ -164,8 +164,6 @@ function view_email(id) {
         .then(response => response.json())
         .then(email => {
 
-
-
             if (email['archived'] != true) {
                 let replyButton = document.createElement('button')
                 replyButton.setAttribute('class', 'btn btn-success')
@@ -215,10 +213,14 @@ function view_email(id) {
             let sender = document.createElement('div')
             sender.setAttribute('id', "sender")
             sender.innerHTML = 'From : ' + email['sender']
+            console.log('Sender: ')
+            console.log(email['sender'])
 
             let recipients = document.createElement('div')
             recipients.setAttribute('id', "recipients")
-            recipients.innerHTML = 'To : ' + email['recipients']
+            recipients.innerHTML = 'To : ' + email['recipients'].toString().replace(",",", ")
+            console.log('Recipients: ')
+            console.log(email['recipients'])
 
             let subject = document.createElement('div')
             subject.setAttribute('id', 'subject')
@@ -253,8 +255,9 @@ function reply_all(id, email) {
     document.querySelector('#compose-view').style.display = 'block';
     document.querySelector('#view-email').style.display = 'none';
 
-    
-    document.querySelector('#compose-recipients').value = email['sender']
+    // document.querySelector('#compose-recipients').value = email['recipients'].replace(",", ", ")
+    document.querySelector('#compose-recipients').value = email['recipients'].join(", ")
+
     if (email['subject'].includes('RE: ')){
         document.querySelector('#compose-subject').value = email['subject']
     } else {
