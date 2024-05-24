@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelector('#archived').addEventListener('click', () => load_mailbox('archive'));
     document.querySelector('#compose').addEventListener('click', () => compose_email());
 
-     document.querySelector('#compose-form').addEventListener('submit', send_mail);
+    document.querySelector('#compose-form').addEventListener('submit', send_mail);
     // By default, load the inbox
     load_mailbox('inbox');
 
@@ -47,14 +47,13 @@ function load_mailbox(mailbox) {
                     let addresses = emails[i]['recipients']
                     let show_addresses = ''
 
-
                     for (let addressCount = 0; addressCount < addresses.length; addressCount++) {
                         if (addressCount == 0) {
                             show_addresses = "<b>" + addresses[addressCount] + "</b>"
                         } else {
                             show_addresses = show_addresses + ', ' + addresses[addressCount]
                             // Only show the first 3 addresses, compact the remainder
-                            if (addressCount == 2){
+                            if (addressCount == 2) {
                                 show_addresses = show_addresses + ', + ' + String(addresses.length - addressCount - 1) + ' addresses.'
                                 break;
                             }
@@ -70,7 +69,6 @@ function load_mailbox(mailbox) {
                 }
 
 
-
                 let emailSummary = document.createElement('div')
                 emailSummary.setAttribute('id', 'email-summary-inbox')
 
@@ -80,12 +78,18 @@ function load_mailbox(mailbox) {
 
                 let emailBody = document.createElement('div')
                 emailBody.setAttribute("id", "body-summary-inbox")
-                if (emails[i]['body'].length > 45) {
-                    emailBody.innerHTML = emails[i]['body'].substring(0, 45) + "..."
-                } else {
-                    emailBody.innerHTML = emails[i]['body']
-                }
 
+
+                // look for the @ symbol in the email so we can begin the true message that follows after
+                let email = emails[i]['body']
+                let email_pos = email.search("@")
+                let email_end = email.substring(email_pos, email.length).search(" ")
+                let email_Content = email.substring(email_pos + email_end, email.length)
+
+                // email_Content = email_Content.replace(/\r\n|\r|\n/g, '<br>')
+                email_Content = email_Content.substring(0, 45) + '...'
+
+                emailBody.innerHTML = email_Content
 
                 emailSummary.appendChild(subject)
                 emailSummary.appendChild(emailBody)
@@ -135,10 +139,9 @@ function send_mail(event) {
     })
         .then(response => response.json())
         .then(result => {
-            if (result['error']){
+            if (result['error']) {
                 alert(JSON.stringify(result));
-            }
-            else {
+            } else {
                 console.log('email sent successfully')
                 load_mailbox('sent')
             }
@@ -171,12 +174,10 @@ function view_email(id) {
                 replyButton.innerHTML = 'Reply all'
 
 
-
                 let unreadButton = document.createElement('button')
                 unreadButton.setAttribute('class', 'btn btn-warning')
                 unreadButton.setAttribute('id', 'mark-unread')
                 unreadButton.innerHTML = 'Mark as unread'
-
 
 
                 let archiveButton = document.createElement('button')
@@ -210,17 +211,19 @@ function view_email(id) {
             }
 
 
-            let sender = document.createElement('div')
-            sender.setAttribute('id', "sender")
-            sender.innerHTML = 'From : ' + email['sender']
-            console.log('Sender: ')
-            console.log(email['sender'])
+            let addressinfo = document.createElement('div')
+            let senderInfo = document.createElement('div')
+            let recipientInfo = document.createElement('div')
 
-            let recipients = document.createElement('div')
-            recipients.setAttribute('id', "recipients")
-            recipients.innerHTML = 'To : ' + email['recipients'].toString().replace(",",", ")
-            console.log('Recipients: ')
-            console.log(email['recipients'])
+            senderInfo.setAttribute('id', "sender")
+            senderInfo.innerHTML = 'From : ' + email['sender']
+
+            recipientInfo.setAttribute('id', "recipients")
+            // recipientInfo.innerHTML = 'To : ' + email['recipients'].toString().replace(",",", ")
+            recipientInfo.innerHTML = 'To : ' + email['recipients'].join(', ')
+
+            console.log(recipientInfo)
+            addressinfo.append(senderInfo, recipientInfo)
 
             let subject = document.createElement('div')
             subject.setAttribute('id', 'subject')
@@ -235,9 +238,9 @@ function view_email(id) {
 
 
             let body = ''
-            body = email['body'].replace(/\r\n|\r|\n/g,'<br>') // replace JS new lines with HTML type new lines
+            body = email['body'].replace(/\r\n|\r|\n/g, '<br>') // replace JS new lines with HTML type new lines
             emailBody.innerHTML = body
-            viewEmailObj.append(interactionsHeader, sender, recipients, subject, tStamp, emailBody)
+            viewEmailObj.append(interactionsHeader, addressinfo, subject, tStamp, emailBody)
 
             fetch('/emails/' + id, {
                 method: 'PUT',
@@ -258,7 +261,7 @@ function reply_all(id, email) {
     // document.querySelector('#compose-recipients').value = email['recipients'].replace(",", ", ")
     document.querySelector('#compose-recipients').value = email['recipients'].join(", ")
 
-    if (email['subject'].includes('RE: ')){
+    if (email['subject'].includes('RE: ')) {
         document.querySelector('#compose-subject').value = email['subject']
     } else {
         document.querySelector('#compose-subject').value = 'RE: ' + email['subject']
@@ -266,7 +269,7 @@ function reply_all(id, email) {
 
     var textBody = '\n \n \n \n' + email['timestamp'] + ' ' + email['sender'] + ' wrote: \n' + email['body']
 
-    document.querySelector('#compose-body').value =  textBody
+    document.querySelector('#compose-body').value = textBody
 
 }
 
@@ -311,8 +314,7 @@ function email_action(id, action) {
     } else if (action === 'reply-all') {
         console.log('replying  all')
 
-    }
-    else {
+    } else {
         console.log('unknown action: ' + action)
     }
 

@@ -39,7 +39,7 @@ textarea {
     grid-column: 4;
 }
 
-#sender {
+#addressInfo {
     padding-top: 10px;
     border-top: solid 1px grey;
     margin: 20px 0px;
