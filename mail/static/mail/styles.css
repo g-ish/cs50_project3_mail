@@ -1,3 +1,63 @@
 textarea {
     min-height: 400px;
 }
+
+/*a:hover {*/
+/*    color:black;*/
+/*    text-decoration:none;*/
+/*    cursor:pointer;*/
+/*}*/
+
+#single-email {
+    border: 2px solid black;
+    color: black;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+}
+
+#single-email :hover{
+    cursor: pointer;
+    background-color: rgb(194, 236, 255);
+}
+#sender-inbox {
+    grid-column: 1;
+}
+#email-summary-inbox {
+    grid-column: 2;
+    display: inline-block;
+}
+
+#subject-inbox {
+    grid-column: 4;
+}
+
+#body-summary-inbox {
+    grid-column: 3/4;
+}
+
+#timestamp-inbox {
+    grid-column: 4;
+}
+
+
+#subject {
+    font-size: 1.2em;
+    padding-bottom: 5px;
+}
+
+#tStamp {
+   padding-bottom: 15px;
+}
+
+#email-body {
+    border-top: solid 1px grey;
+    padding-top: 15px;
+
+}
+#unreadButton {
+    float: right;
+}
+
+#email-interactions-header > button {
+    margin-right: 15px;
+}
