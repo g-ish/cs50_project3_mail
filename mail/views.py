@@ -77,17 +77,14 @@ def mailbox(request, mailbox):
 
     # Filter emails returned based on mailbox
     if mailbox == "inbox":
-        print('inbox requested')
         emails = Email.objects.filter(
             user=request.user, recipients=request.user, archived=False
         )
     elif mailbox == "sent":
-        print('sent requested')
         emails = Email.objects.filter(
             user=request.user, sender=request.user
         )
     elif mailbox == "archive":
-        print('archive requested')
         emails = Email.objects.filter(
             user=request.user, recipients=request.user, archived=True
         )
